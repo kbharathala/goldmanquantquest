@@ -48,5 +48,7 @@ with open('results.csv', 'wb') as f:
                 link = "https://en.wikipedia.org/wiki/" + company_name
                 #company_text[company_name] = file_cleaner(link)
                 writer.writerow([company_name, file_cleaner(link)])
+                if(company_name == "Zoetis"):
+                    break
             count += 1
             text = text[end:]
