@@ -1,5 +1,6 @@
 import csv
 import gensim
+from gensim import corpora, models
 
 docDict = {}
 docList = []
@@ -9,14 +10,12 @@ with open('resultsTok.csv', 'rt') as csvfile:
 	for row in reader:
 		docDict[row[0]] = row[1:]
 		docList.append(row[1:])
+	corpus = [docDict.doc2bow(csvfile) for Tok in resultsTok.csv]
 
 #import genism 
-from gensim import corpora, models
 
 #this turns corpus into a list of vectors equal to the nunmber of docs
 #in each doc vector there are tuples corresponding to (term ID, term freq)
-corpus = [docDict.doc2bow(resultsTok.csv) for Tok in resultsTok.csv]
-
 #now we can create the lda model
 #n is the number of topics that we want
 #p is the number of laps the model takes through corpus
