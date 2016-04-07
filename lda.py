@@ -1,12 +1,13 @@
 #import genism 
 from gensim import corpora, models
+import csv
 
 #create a dictionary with the texts
-dictionary = corpora.Dictionary(docDict)
+dictionary = corpora.Dictionary(excelToDictionary.docDict)
 
 #this turns corpus into a list of vectors equal to the nunmber of docs
 #in each doc vector there are tuples corresponding to (term ID, term freq)
-corpus = [dictionary.doc2bow(docDict) for text in docDict]
+corpus = [dictionary.doc2bow(excelToDictionary.docDict) for text in excelToDictionary.docDict]
 
 #now we can create the lda model
 #n is the number of topics that we want
