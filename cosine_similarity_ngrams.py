@@ -2,17 +2,8 @@ import numpy as np
 import pandas as pd
 import urllib2
 import re
-
-def file_cleaner(page_text):
-    # Removes all the html and extra white space
-    text = re.sub('<[^>]*>', '', page_text)
-    text = " ".join(text.split())
-    
-    # Removes all the 
-    first = text.find("See also")
-    second = text[first+1:].find("See also")
-    text = text[:first+second].split()
-    return text 
+import csv
+import scipy.spatial.distance as ssd
 
 def cosine_distance(u, v):
     return np.dot(u, v) / (math.sqrt(np.dot(u, u)) * math.sqrt(np.dot(v, v)))
@@ -26,7 +17,7 @@ def ngrams_method(sequence, n):
 def cosine_similarity_n_grams(dict, n):
     dict_ngrams = {}
     for company in dict:
-        ngrams = ngrams_method(file_cleaner(dict[company]), n)
+        ngrams = ngrams_method(dict[company], n)
         dict_ngrams[company] = ngrams
         print(ngrams)
     companies = dict_ngrams.keys()
@@ -37,36 +28,20 @@ def cosine_similarity_n_grams(dict, n):
             if company1 == company2:
                 continue
             else:
-                val = cosine_distance(dict_ngrams[company1][:200], dict_ngrams[company2][:200]) # don't know what to do about reverse part
+                val = ssd.cosine(dict_ngrams[company1], np.transpose(dict_ngrams[company2]))
             df.xs(company1)[company2] = val
             print(val)
     return df
 
-f = urllib2.urlopen("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
-text = f.read()
-count = 0
-company_links = []
-company_text = {}
-print('here!')
-while((text.find("<td><a href=\"/wiki/") != -1 or text.find("<td><a href=\"/w/index.php?title=") != -1) and count < 1008):
-    if(text.find("<td><a href=\"/wiki/") > text.find("<td><a href=\"/w/index.php?title=")):
-        print('I died')
-        text = text[text.find("(page does not exist)")+10:]
-        count += 1
-    else:
-        start = text.find("<td><a href=\"/wiki/")
-        text = text[start+1:]
-        end = text.find("title")
-        if(count %2 == 0):
-            company_name = text[18:end-2]
-            link = "https://en.wikipedia.org/wiki/" + company_name
-            company_text[company_name] = urllib2.urlopen(link).read()
-            company_links.append(link)
-        count += 1
-        print(count)
-        text = text[end:]
+docDict = {}
+docList = []
 
-print(company_text)
-print('hello')
+with open('resultsTok.csv', 'rt') as csvfile:
+  reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+  for row in reader:
+      docDict[row[0]] = row[1:]
+      docList.append(row[1:])
 
-cosine_similarity_n_grams(company_text, 1)
+print(docDict) #stuff
+
+cosine_similarity_n_grams(docDict, 1)
