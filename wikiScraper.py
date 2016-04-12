@@ -8,8 +8,9 @@ from nltk.stem.porter import PorterStemmer
 
 BASE_URL = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
 COMPANY_COUNT = 1008
+company_equities = {}
 
-def file_cleaner(link):
+def file_cleaner(link, company_name):
     tokenizer = RegexpTokenizer(r'\w+')
     p_stemmer = PorterStemmer()
 
@@ -18,6 +19,7 @@ def file_cleaner(link):
 
     # Removes all the html and extra white space
     text = re.sub('<[^>]*>', '', text)
+    #print(text)
     text = " ".join(text.split())
     
     # Removes everything after See Also
@@ -31,6 +33,29 @@ def file_cleaner(link):
 
     # Removes everything between brackets.
     text = re.sub(r'\[[^)]*\]', '', text)
+    #print(text)
+    equity_start = text.find("Total assets US$")
+
+    if (equity_start < 0):
+        company_equities[company_name] = 0
+    else:
+        equity_text = text[equity_start + 16:]
+        equity_end = equity_text.find("il")
+        if ((equity_end  > 25) or (equity_end < 0)):
+            equity_end = equity_text.find("B (")
+            if (equity_end  > 25 or equity_end < 0):
+                equity_end = equity_text.find("M (")
+                if (equity_end > 25 or equity_end < 0):
+                    equity_end = equity_text.find("(FY ")
+                    if (equity_end > 35 or equity_end < 0):
+                        equity_end = equity_text.find("bn")
+        equity_amt = equity_text[:equity_end] 
+        equity_amt = equity_amt.strip()
+        company_equities[company_name] = equity_amt
+        print(equity_amt)
+
+
+
 
     # Tokenizing and removing common stop words
     tokens = tokenizer.tokenize(text.lower())
@@ -67,10 +92,10 @@ with open('resultsTok.csv', 'wb') as f:
                 general_industry_text = industrial_text[:end_general_industrial]
                 specific_industry_text = industrial_text[end_general_industrial + 10 : end_industrial +1]
                 company_name = text[18:end-2]
-                print(company_name)
+                #print(company_name)
                 company_industries[company_name] = (general_industry_text, specific_industry_text)
                 link = "https://en.wikipedia.org/wiki/" + company_name
-                clean_file = file_cleaner(link)
+                clean_file = file_cleaner(link, company_name)
                 #company_text[company_name] = file_cleaner(link)
                 writer.writerow([company_name] + clean_file)
                 if(company_name == "Zoetis"):
