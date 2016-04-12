@@ -49,6 +49,7 @@ with open('resultsTok.csv', 'wb') as f:
     writer = csv.writer(f)
     count = 0
     company_links = []
+    company_industries = {}
     #company_text = {}
     while((text.find("<td><a href=\"/wiki/") != -1 or text.find("<td><a href=\"/w/index.php?title=") != -1) and count < COMPANY_COUNT*2 + 8):
         if(text.find("<td><a href=\"/wiki/") > text.find("<td><a href=\"/w/index.php?title=")):
@@ -58,9 +59,16 @@ with open('resultsTok.csv', 'wb') as f:
             start = text.find("<td><a href=\"/wiki/")
             text = text[start+1:]
             end = text.find("title")
+            start_industrial = text.find("reports</a></td>") + 20
+            industrial_text = text[start_industrial+1:]
+            end_industrial = industrial_text.find("<td><a href=") - 7
+            end_general_industrial = industrial_text.find("</td>");
             if(count %2 == 0):
+                general_industry_text = industrial_text[:end_general_industrial]
+                specific_industry_text = industrial_text[end_general_industrial + 10 : end_industrial +1]
                 company_name = text[18:end-2]
                 print(company_name)
+                company_industries[company_name] = (general_industry_text, specific_industry_text)
                 link = "https://en.wikipedia.org/wiki/" + company_name
                 clean_file = file_cleaner(link)
                 #company_text[company_name] = file_cleaner(link)
@@ -69,3 +77,4 @@ with open('resultsTok.csv', 'wb') as f:
                     break
             count += 1
             text = text[end:]
+    print(company_industries)
