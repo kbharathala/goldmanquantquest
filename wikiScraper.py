@@ -103,6 +103,20 @@ def create_econ_link_matricies():
     matrix_dict['equity_matrix'] = em
     return matrix_dict
 
+def matrix_compilation(full_matrix_dict):
+    count = 0
+    industry_matrix = matrix_dict['industry_matrix']
+    location_matrix = matrix_dict['location_matrix']
+    equity_matrix = matrix_dict['equity_matrix']
+    final_matrix = pd.DataFrame(index = companies, columns = companies)
+    for company1 in companies:
+        for company2 in companies:
+            val = industry_matrix.get_value(company1, company2) * location_matrix.get_value(company1, company2) * equity_matrix.get_value(company1, company2)#will need to be modified once we have lda
+            final_matrix.xs(company1)[company2] = val
+            count += 1
+            print(count)
+    return final_matrix
+
 def file_cleaner(link, company_name):
     tokenizer = RegexpTokenizer(r'\w+')
     p_stemmer = PorterStemmer()
@@ -242,6 +256,7 @@ with open('resultsTok.csv', 'wb') as f:
     matrix_dict = create_econ_link_matricies()
     for matrix in matrix_dict:
         print(matrix_dict[matrix])
+    print(matrix_compilation(matrix_dict))
 
 
     #Testing both functions
