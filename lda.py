@@ -1,5 +1,6 @@
 import csv
 from bow import BagOfWords
+import gensim
 from gensim import corpora, models
 
 docDict = {}
@@ -13,12 +14,9 @@ with open('resultsTok.csv', 'rt') as csvfile:
 
 dictionary = corpora.Dictionary(docList)
 corpus = [dictionary.doc2bow(text) for text in docList]
+ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics=10, id2word = dictionary, passes=3)
+print(ldamodel.show_topics(num_topics=10, num_words=10, log=False, formatted=True))
+# corpus_lda = ldamodel[corpus]
 
-ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics=2, id2word = dictionary, passes=20)
-
-# #printing will give us the freq of a word in a doc a
-corpus_lda = ldamodel[corpus]
-
-for l,t in izip(corpus_lda,corpus):
-  print l,"#",t
-print 
+# for i in range(min(len(corpus_lda), len(corpus))):
+# 	print(corpus_lda[i], corpus[i])
