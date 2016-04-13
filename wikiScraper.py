@@ -2,6 +2,7 @@ import urllib2
 import re
 import csv
 import math
+import pandas as pd
 
 from nltk.tokenize import RegexpTokenizer
 from stop_words import get_stop_words
@@ -12,6 +13,7 @@ COMPANY_COUNT = 1008
 company_equities = {}
 company_industries = {}
 company_locations = {}
+companies = []
 all_states = ["Alaska", "Alabama", "Arkansas", "American Samoa", "Arizona",
 "California", "Colorado", "Connecticut", "District ", "of Columbia",
 "Delaware", "Florida", "Georgia", "Guam", "Hawaii", "Iowa", "Idaho",
@@ -26,45 +28,48 @@ all_states = ["Alaska", "Alabama", "Arkansas", "American Samoa", "Arizona",
 def company_industry_multiples(company1, company2):
     if (company1 not in company_industries):
         print("Error: company not in dictionary")
+        exit()#delete this!
     elif (company2 not in company_industries):
         print("Error: company not in dictionary")
+        exit()#delete this!
     else:
         company1_info = company_industries[company1]
         company2_info = company_industries[company2]
-
+        toMultiply = 1
         if (company1_info[1] == company2_info[1]):
             toMultiply = math.sqrt(4)
         elif (company1_info[0] == company2_info[0]):
             toMultiply = math.sqrt(2)
-        else:
-            toMultiply = math.sqrt(1)
         print(toMultiply)
         return toMultiply
 
 def company_location_multiples(company1, company2):
     if (company1 not in company_locations):
         print("Error: company not in dictionary")
+        exit()#delete this!
     elif (company2 not in company_locations):
         print("Error: company not in dictionary")
+        exit()#delete this!
     else:
         company1_location = company_locations[company1]
         company2_location = company_locations[company2]
-
+        toMultiply = 1
         if (company1_location == company2_location):
             toMultiply = math.sqrt(1.5)
-        else:
-            toMultiply = 1
         print(toMultiply)
         return toMultiply
 
 def company_equity_multiples(company1, company2):
     if (company1 not in company_equities):
         print("Error: company not in dictionary")
+        exit()#delete this!
     elif (company2 not in company_equities):
         print("Error: company not in dictionary")
+        exit()#delete this!
     else:
         company1_equity = company_equities[company1]
         company2_equity = company_equities[company2]
+        toMultiply = 1#something to change
         if ((company1_equity == 0) or (company2_equity == 0)):
             toMultiply = 1
         else:
@@ -72,6 +77,31 @@ def company_equity_multiples(company1, company2):
                 toMultiply = math.sqrt(2)
         print(toMultiply)
         return toMultiply
+
+def create_econ_link_matricies():
+    matrix_dict = {}
+    im = pd.DataFrame(index = companies, columns = companies)
+    lm = pd.DataFrame(index = companies, columns = companies)
+    em = pd.DataFrame(index = companies, columns = companies)
+    count = 0
+    for company1 in companies:
+        for company2 in companies:
+            val_i = 1
+            val_l = 1
+            val_e = 1
+            if company1 != company2:
+                val_i = company_industry_multiples(company1, company2)
+                val_l = company_location_multiples(company1, company2)
+                val_e = company_equity_multiples(company1, company2)
+            im.xs(company1)[company2] = val_i
+            lm.xs(company1)[company2] = val_l
+            em.xs(company1)[company2] = val_e
+            count += 1
+            print(count)
+    matrix_dict['industry_matrix'] = im
+    matrix_dict['location_matrix'] = lm
+    matrix_dict['equity_matrix'] = em
+    return matrix_dict
 
 def file_cleaner(link, company_name):
     tokenizer = RegexpTokenizer(r'\w+')
@@ -114,8 +144,8 @@ def file_cleaner(link, company_name):
                         equity_end = equity_text.find("bn")
         equity_amt = equity_text[:equity_end]
         equity_amt = equity_amt.strip().lower().replace(',', '').replace('$', '')
-        print(company_name)
-        print(equity_amt)
+        #print(company_name)
+        #print(equity_amt)
         val = 0
         if 'b' in equity_amt:
             val = 1000000000
@@ -130,10 +160,10 @@ def file_cleaner(link, company_name):
         equity_amt = equity_amt.split("&")[0].split(" ")[0]
         equity_amt = float(equity_amt) * val
         if equity_amt < 1000000:
-            print"SOMETHING WENT WRONG"
+            #print"SOMETHING WENT WRONG"
             equity_amt = 0
         company_equities[company_name] = equity_amt
-        print(equity_amt)
+        #print(equity_amt)
 
 
 
@@ -194,13 +224,25 @@ with open('resultsTok.csv', 'wb') as f:
                 link = "https://en.wikipedia.org/wiki/" + company_name
                 clean_file = file_cleaner(link, company_name)
                 writer.writerow([company_name] + clean_file)
+                companies.append(company_name)
                 if(company_name == "Zoetis"):
                     break
             count += 1
             text = text[end:]
+            print(count)
+
+    print('company_industries')
     print(company_industries)
+    print('company_locations')
     print(company_locations)
+    print('company_equities')
     print(company_equities)
+    print(companies)
+
+    matrix_dict = create_econ_link_matricies()
+    for matrix in matrix_dict:
+        print(matrix_dict[matrix])
+
 
     #Testing both functions
     #company_industry_multiples("3M", "AbbVie")
