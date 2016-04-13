@@ -12,15 +12,15 @@ COMPANY_COUNT = 1008
 company_equities = {}
 company_industries = {}
 company_locations = {}
-all_states = ["Alaska", "Alabama", "Arkansas", "American Samoa", "Arizona", 
-"California", "Colorado", "Connecticut", "District ", "of Columbia", 
-"Delaware", "Florida", "Georgia", "Guam", "Hawaii", "Iowa", "Idaho", 
-"Illinois", "Indiana", "Kansas", "Kentucky", "Louisiana", "Massachusetts", 
-"Maryland", "Maine", "Michigan", "Minnesota", "Missouri", "Mississippi", 
-"Montana", "North Carolina", "North Dakota", "Nebraska", "New Hampshire", 
-"New Jersey", "New Mexico", "Nevada", "New York", "Ohio", "Oklahoma", 
-"Oregon", "Pennsylvania", "Puerto Rico", "Rhode Island", "South Carolina", 
-"South Dakota", "Tennessee", "Texas", "Utah", "Virginia", "Virgin Islands", 
+all_states = ["Alaska", "Alabama", "Arkansas", "American Samoa", "Arizona",
+"California", "Colorado", "Connecticut", "District ", "of Columbia",
+"Delaware", "Florida", "Georgia", "Guam", "Hawaii", "Iowa", "Idaho",
+"Illinois", "Indiana", "Kansas", "Kentucky", "Louisiana", "Massachusetts",
+"Maryland", "Maine", "Michigan", "Minnesota", "Missouri", "Mississippi",
+"Montana", "North Carolina", "North Dakota", "Nebraska", "New Hampshire",
+"New Jersey", "New Mexico", "Nevada", "New York", "Ohio", "Oklahoma",
+"Oregon", "Pennsylvania", "Puerto Rico", "Rhode Island", "South Carolina",
+"South Dakota", "Tennessee", "Texas", "Utah", "Virginia", "Virgin Islands",
 "Vermont", "Washington", "Wisconsin", "West Virginia", "Wyoming"]
 
 def company_industry_multiples(company1, company2):
@@ -68,7 +68,7 @@ def file_cleaner(link, company_name):
     text = re.sub('<[^>]*>', '', text)
     #print(text)
     text = " ".join(text.split())
-    
+
     # Removes everything after See Also
     first = text.find("See also")
     second = text[first+1:].find("See also")
@@ -96,8 +96,26 @@ def file_cleaner(link, company_name):
                     equity_end = equity_text.find("(FY ")
                     if (equity_end > 35 or equity_end < 0):
                         equity_end = equity_text.find("bn")
-        equity_amt = equity_text[:equity_end] 
-        equity_amt = equity_amt.strip()
+        equity_amt = equity_text[:equity_end]
+        equity_amt = equity_amt.strip().lower().replace(',', '').replace('$', '')
+        print(company_name)
+        print(equity_amt)
+        val = 0
+        if 'b' in equity_amt:
+            val = 1000000000
+        else:
+            if 'm' in equity_amt:
+                val = 1000000
+            else:
+                if 't' in equity_amt:
+                    val = 1000000000000
+                else:
+                    val = 1
+        equity_amt = equity_amt.split("&")[0].split(" ")[0]
+        equity_amt = float(equity_amt) * val
+        if equity_amt < 1000000:
+            print"SOMETHING WENT WRONG"
+            equity_amt = 0
         company_equities[company_name] = equity_amt
         print(equity_amt)
 
@@ -133,12 +151,12 @@ with open('resultsTok.csv', 'wb') as f:
             industrial_text = text[start_industrial+1:]
             end_industrial = industrial_text.find("<td><a href=") - 7
             end_general_industrial = industrial_text.find("</td>");
-            start_location = text.find("<td><a href=") 
+            start_location = text.find("<td><a href=")
             location_text = text[start_location:]
             place_start_location = location_text.find('title="') + 7
             place_end_location = location_text.find('">')
             end_location = text.find("</a></td>");
-    
+
             if(count % 2 == 0):
                 company_name = text[18:end-2]
                 general_industry_text = industrial_text[:end_general_industrial]
@@ -154,7 +172,7 @@ with open('resultsTok.csv', 'wb') as f:
                     else:
                         company_locations[company_name] = place_text[1]
                 else:
-                    company_locations[company_name] = place_text              
+                    company_locations[company_name] = place_text
 
                 company_industries[company_name] = (general_industry_text, specific_industry_text)
                 link = "https://en.wikipedia.org/wiki/" + company_name
@@ -172,6 +190,6 @@ with open('resultsTok.csv', 'wb') as f:
     #company_industry_multiples("Interpublic_Group", "Omnicom_Group")
     #company_location_multiples("3M", "AbbVie")
     #company_location_multiples("AFLAC_Inc", "Affiliated_Managers_Group_Inc")
-    #company_location_multiples("Interpublic_Group", "Omnicom_Group") 
-    #company_location_multiples("Extra_Space_Storage", "Transocean")   
-    #company_location_multiples("3M", "Transocean") 
+    #company_location_multiples("Interpublic_Group", "Omnicom_Group")
+    #company_location_multiples("Extra_Space_Storage", "Transocean")
+    #company_location_multiples("3M", "Transocean")
