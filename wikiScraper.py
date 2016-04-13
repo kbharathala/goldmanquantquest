@@ -57,6 +57,22 @@ def company_location_multiples(company1, company2):
         print(toMultiply)
         return toMultiply
 
+def company_equity_multiples(company1, company2):
+    if (company1 not in company_equities):
+        print("Error: company not in dictionary")
+    elif (company2 not in company_equities):
+        print("Error: company not in dictionary")
+    else:
+        company1_equity = company_equities[company1]
+        company2_equity = company_equities[company2]
+        if ((company1_equity == 0) or (company2_equity == 0)):
+            toMultiply = 1
+        else:
+            if (abs(math.log10(company1_equity)-math.log10(company2_equity))<1):
+                toMultiply = math.sqrt(2)
+        print(toMultiply)
+        return toMultiply
+
 def file_cleaner(link, company_name):
     tokenizer = RegexpTokenizer(r'\w+')
     p_stemmer = PorterStemmer()
@@ -184,6 +200,8 @@ with open('resultsTok.csv', 'wb') as f:
             text = text[end:]
     print(company_industries)
     print(company_locations)
+    print(company_equities)
+
     #Testing both functions
     #company_industry_multiples("3M", "AbbVie")
     #company_industry_multiples("AFLAC_Inc", "Affiliated_Managers_Group_Inc")
