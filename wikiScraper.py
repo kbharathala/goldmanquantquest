@@ -149,17 +149,32 @@ def file_cleaner(link, company_name):
         equity_text = text[equity_start + 16:]
         equity_end = equity_text.find("il")
         if ((equity_end  > 25) or (equity_end < 0)):
-            equity_end = equity_text.find("B (")
-            if (equity_end  > 25 or equity_end < 0):
-                equity_end = equity_text.find("M (")
-                if (equity_end > 25 or equity_end < 0):
-                    equity_end = equity_text.find("(FY ")
-                    if (equity_end > 35 or equity_end < 0):
-                        equity_end = equity_text.find("bn")
+            equity_end = equity_text.find("B ")
+            if (equity_end > 25 or equity_end < 0):
+                equity_end = equity_text.find("B (")
+                if (equity_end  > 25 or equity_end < 0):
+                    equity_end = equity_text.find("bn")
+                    print("now in this case")
+                    print(equity_end)
+                    if (equity_end > 25 or equity_end < 0):
+                        print("don't want this to show up")
+                        equity_end = equity_text.find("M (")
+                        if (equity_end > 25 or equity_end < 0):
+                            equity_end = equity_text.find("(FY ")
+                            if (equity_end > 35 or equity_end < 0):
+                                equity_end = equity_text.find("bn")
+                        else:
+                            print("want this to show up though")
+                            equity_end = equity_end + 2
+                    else:
+                        print("or this to show up too")
+                        equity_end = equity_end + 2
+            else:
+                equity_end = equity_end + 2
         equity_amt = equity_text[:equity_end]
         equity_amt = equity_amt.strip().lower().replace(',', '').replace('$', '')
-        #print(company_name)
-        #print(equity_amt)
+        print(company_name)
+        print(equity_amt)
         val = 0
         if 'b' in equity_amt:
             val = 1000000000
@@ -171,7 +186,14 @@ def file_cleaner(link, company_name):
                     val = 1000000000000
                 else:
                     val = 1
-        equity_amt = equity_amt.split("&")[0].split(" ")[0]
+        if ('b' in equity_amt):
+            equity_amt = equity_amt.split("&")[0].split("b")[0]
+        elif ('m' in equity_amt):
+            equity_amt = equity_amt.split("&")[0].split("m")[0]
+        elif ('t' in equity_amt):
+            equity_amt = equity_amt.split("&")[0].split("t")[0]
+        else:
+            equity_amt = equity_amt.split("&")[0].split(" ")[0]
         equity_amt = float(equity_amt) * val
         if equity_amt < 1000000:
             #print"SOMETHING WENT WRONG"
