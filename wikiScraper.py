@@ -36,9 +36,9 @@ def company_industry_multiples(company1, company2):
         company2_info = company_industries[company2]
         toMultiply = 1
         if (company1_info[1] == company2_info[1]):
-            toMultiply = math.sqrt(4)
+            toMultiply = math.sqrt(8)
         elif (company1_info[0] == company2_info[0]):
-            toMultiply = math.sqrt(2)
+            toMultiply = math.sqrt(6)
         print(toMultiply)
         return toMultiply
 
@@ -64,7 +64,7 @@ def company_equity_multiples(company1, company2):
     else:
         company1_equity = company_equities[company1]
         company2_equity = company_equities[company2]
-        toMultiply = 1#something to change
+        toMultiply = 1
         if ((company1_equity == 0) or (company2_equity == 0)):
             toMultiply = 1
         else:
@@ -85,28 +85,32 @@ def company_equity_multiples(company1, company2):
 def company_year_multiples(company1, company2):
     if (company1 not in company_years):
         print("Error: company not in dictionary")
-        exit()#delete this!
     elif (company2 not in company_years):
         print("Error: company not in dictionary")
-        exit()#delete this!
     else:
         company1_year = company_years[company1]
         company2_year = company_years[company2]
-        toMultiply = 1#something to change
+        toMultiply = 1
         if ((company1_year == 0) or (company2_year == 0)):
             toMultiply = 1
-        else:   #NEED TO CHANGE THIS
-            if (abs(math.log10(company1_year)-math.log10(company2_year))<1):
-                toMultiply = math.sqrt(2)
+        else:
+            if (abs(company1_year)-(company2_year))<25:
+                toMultiply = math.sqrt(5)
+            else:
+                if (abs(company1_year)-(company2_year))<50:
+                    toMultiply = math.sqrt(4)
+                else:
+                    if (abs(company1_year)-(company2_year))<100:
+                        toMultiply = math.sqrt(4)
         print(toMultiply)
-        return toMultiply        
+        return toMultiply
 
 def create_econ_link_matricies():
     matrix_dict = {}
     im = pd.DataFrame(index = companies, columns = companies)
     lm = pd.DataFrame(index = companies, columns = companies)
     em = pd.DataFrame(index = companies, columns = companies)
-    yr = pd.DataFrame(index = companies, columns = companies)
+    ym = pd.DataFrame(index = companies, columns = companies)
     count = 0
     for company1 in companies:
         for company2 in companies:
@@ -119,16 +123,25 @@ def create_econ_link_matricies():
                 val_l = company_location_multiples(company1, company2)
                 val_e = company_equity_multiples(company1, company2)
                 val_y = company_year_multiples(company1, company2)
+            else:
+                val_i = 0
+                val_l = 0
+                val_e = 0
+                val_y = 0
             im.xs(company1)[company2] = val_i
             lm.xs(company1)[company2] = val_l
             em.xs(company1)[company2] = val_e
-            yr.xs(company1)[company2] = val_y
+            ym.xs(company1)[company2] = val_y
             count += 1
             print(count)
+    print(im)
+    print(lm)
+    print(em)
+    print(ym)
     matrix_dict['industry_matrix'] = im
     matrix_dict['location_matrix'] = lm
     matrix_dict['equity_matrix'] = em
-    matrix_dict['year_matrix'] = yr
+    matrix_dict['year_matrix'] = ym
     return matrix_dict
 
 def matrix_compilation(full_matrix_dict):
@@ -142,10 +155,9 @@ def matrix_compilation(full_matrix_dict):
     for company1 in companies:
         sum_row = 0
         for company2 in companies:
-            val = industry_matrix.get_value(company1, company2) * location_matrix.get_value(company1, company2) * equity_matrix.get_value(company1, company2) * year_matrix.get_value(company1, company2)#will need to be modified once we have lda
-            final_matrix.xs(company1)[company2] = val
-            sum_row += val
-        sum_dict[company1] = sum_row
+            val = industry_matrix.get_value(company1, company2) * location_matrix.get_value(company1, company2) * equity_matrix.get_value(company1, company2) * year_matrix.get_value(company1, company2)
+            count += 1
+            print(count)
     for company1 in companies:
         divisor = sum_dict[company1]
         sum_row = 0
@@ -153,6 +165,8 @@ def matrix_compilation(full_matrix_dict):
             val = (final_matrix.get_value(company1, company2) / divisor)
             final_matrix.xs(company1)[company2] = val
             sum_row += val
+            count -= 1
+            print(count)
     return final_matrix
 
 def file_cleaner(link, company_name):
@@ -187,7 +201,7 @@ def file_cleaner(link, company_name):
     # print(year_text)
 
     common_words = ["Wikipedia", "CEO", "amp", "view", "edits", "View of the content page", "Discussion about the content page"
-                    "A list of recent changes in the wiki", " what you can do", "Discussion about edits from this IP address", 
+                    "A list of recent changes in the wiki", " what you can do", "Discussion about edits from this IP address",
                     "Find background information on current events", "Load a random article", "Recent changes in pages linked from this page"
                     , "A list of edits made from this IP address", "Upload files", "Enlarge", "Portal", "Template", "Wikipedia:Citation need",
                     "Visit the main page", "Reuters", "Forbes", "Wikipedia:About", "Help:Category", "Help:CS1 errors"]
@@ -248,7 +262,7 @@ def file_cleaner(link, company_name):
     if (year_info is None):
         company_years[company_name] = 0
     else:
-        company_years[company_name] = year_info
+        company_years[company_name] = float(year_info)
 
     if (equity_start < 0):
         company_equities[company_name] = 0
@@ -358,13 +372,12 @@ with open('keywordTok.csv', 'wb') as f:
     print(company_locations)
     print('company_equities')
     print(company_equities)
+    print('company_years')
     print(company_years)
     print(companies)
+    print(len(companies))
 
-    matrix_dict = create_econ_link_matricies()
-    for matrix in matrix_dict:
-        print(matrix_dict[matrix])
-    print(matrix_compilation(matrix_dict))
+    print(matrix_compilation(create_econ_link_matricies()))
 
 
     #Testing both functions
