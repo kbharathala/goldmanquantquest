@@ -74,83 +74,126 @@ def company_equity_multiples(company1, company2):
         return toMultiply
 
 def file_cleaner(link, company_name):
+
+    print(company_name)
+
     tokenizer = RegexpTokenizer(r'\w+')
     p_stemmer = PorterStemmer()
 
     f = urllib2.urlopen(link)
     text = f.read()
 
-    # Removes all the html and extra white space
-    text = re.sub('<[^>]*>', '', text)
-    #print(text)
-    text = " ".join(text.split())
+    temp = text
 
     # Removes everything after See Also
-    first = text.find("See also")
-    second = text[first+1:].find("See also")
-    text = text[:first+second]
+    first = temp.find("See also")
+    second = temp[first+1:].find("See also")
+    temp = temp[:first+second]
 
     # Removes everything before the start of the article
-    first = text.find("navigation, search")
-    text = text[first+18:]
+    first = temp.find("navigation, search")
+    temp = temp[first+18:]
 
-    # Removes everything between brackets.
-    text = re.sub(r'\[[^)]*\]', '', text)
-    #print(text)
-    equity_start = text.find("Total assets US$")
+    temp = temp[temp.find("Website"):]
 
-    if (equity_start < 0):
-        company_equities[company_name] = 0
-    else:
-        equity_text = text[equity_start + 16:]
-        equity_end = equity_text.find("il")
-        if ((equity_end  > 25) or (equity_end < 0)):
-            equity_end = equity_text.find("B (")
-            if (equity_end  > 25 or equity_end < 0):
-                equity_end = equity_text.find("M (")
-                if (equity_end > 25 or equity_end < 0):
-                    equity_end = equity_text.find("(FY ")
-                    if (equity_end > 35 or equity_end < 0):
-                        equity_end = equity_text.find("bn")
-        equity_amt = equity_text[:equity_end]
-        equity_amt = equity_amt.strip().lower().replace(',', '').replace('$', '')
-        print(company_name)
-        print(equity_amt)
-        val = 0
-        if 'b' in equity_amt:
-            val = 1000000000
-        else:
-            if 'm' in equity_amt:
-                val = 1000000
-            else:
-                if 't' in equity_amt:
-                    val = 1000000000000
-                else:
-                    val = 1
-        equity_amt = equity_amt.split("&")[0].split(" ")[0]
-        equity_amt = float(equity_amt) * val
-        if equity_amt < 1000000:
-            print"SOMETHING WENT WRONG"
-            equity_amt = 0
-        company_equities[company_name] = equity_amt
-        print(equity_amt)
+    tokens = []
 
+    common_words = ["Wikipedia", "CEO", "amp", "view", "edits"]
 
+    while(temp.find("<a href=\"/wiki/") != -1):
+        checker = True
+        first = temp.find("<a href=\"/wiki/")
+        second = temp[first:].find("title=")
+        end = temp[second+first+7:].find("\"")
+        term = temp[second+first+7:end+second+first+7]
+        temp = temp[end:]
+        if term not in tokens and term not in all_states and "Wikipedia" not in term and "CEO" not in term and "amp" not in term and "Category" not in term:
+            tokens.append(term)
+            # for word in common_words:
+            #     if word in term:
+            #         checker = False
+            # if checker:
+            #     tokens.append(term)
 
     # Tokenizing and removing common stop words
-    tokens = tokenizer.tokenize(text.lower())
-    tokens = [unicode(i, 'ascii', 'ignore') for i in tokens]
-    tokens = [str(i) for i in tokens if not i in get_stop_words('en')]
-    tokens = [i for i in tokens if len(i) > 2]
+
+    # tokens = tokenizer.tokenize(text.lower())
+    # tokens = [unicode(i, 'ascii', 'ignore') for i in tokens]
+    # tokens = [str(i) for i in tokens if not i in get_stop_words('en')]
+    # tokens = [i for i in tokens if not i.isdigit()]
+
+    # # Removes all the html and extra white space
+    # text = re.sub('<[^>]*>', '', text)
+    # #print(text)
+    # text = " ".join(text.split())
+
+    # # Removes everything after See Also
+    # first = text.find("See also")
+    # second = text[first+1:].find("See also")
+    # text = text[:first+second]
+
+    # # Removes everything before the start of the article
+    # first = text.find("navigation, search")
+    # text = text[first+18:]
+
+    # temp = text[text.find("Website"):]
+
+    # # Removes everything between brackets.
+    # text = re.sub(r'\[[^)]*\]', '', text)
+
+    # equity_start = text.find("Total assets US$")
+
+    # if (equity_start < 0):
+    #     company_equities[company_name] = 0
+    # else:
+    #     equity_text = text[equity_start + 16:]
+    #     equity_end = equity_text.find("il")
+    #     if ((equity_end  > 25) or (equity_end < 0)):
+    #         equity_end = equity_text.find("B (")
+    #         if (equity_end  > 25 or equity_end < 0):
+    #             equity_end = equity_text.find("M (")
+    #             if (equity_end > 25 or equity_end < 0):
+    #                 equity_end = equity_text.find("(FY ")
+    #                 if (equity_end > 35 or equity_end < 0):
+    #                     equity_end = equity_text.find("bn")
+    #     equity_amt = equity_text[:equity_end]
+    #     equity_amt = equity_amt.strip().lower().replace(',', '').replace('$', '')
+    #     print(company_name)
+    #     #print(equity_amt)
+    #     val = 0
+    #     if 'b' in equity_amt:
+    #         val = 1000000000
+    #     else:
+    #         if 'm' in equity_amt:
+    #             val = 1000000
+    #         else:
+    #             if 't' in equity_amt:
+    #                 val = 1000000000000
+    #             else:
+    #                 val = 1
+    #     equity_amt = equity_amt.split("&")[0].split(" ")[0]
+    #     equity_amt = float(equity_amt) * val
+    #     if equity_amt < 1000000:
+    #         print"SOMETHING WENT WRONG"
+    #         equity_amt = 0
+    #     company_equities[company_name] = equity_amt
+    #     #print(equity_amt)
+
+    # # Tokenizing and removing common stop words
+    # # tokens = tokenizer.tokenize(text.lower())
+    # # tokens = [unicode(i, 'ascii', 'ignore') for i in tokens]
+    # # tokens = [str(i) for i in tokens if not i in get_stop_words('en')]
+    # # tokens = [i for i in tokens if not i.isdigit()]
+    # # tokens = [i for i in tokens if len(i) > 2]
 
     return tokens
 
-#print(file_cleaner("https://en.wikipedia.org/wiki/3M"))
+#print(file_cleaner("https://en.wikipedia.org/wiki/Abbott_Laboratories", "Abbott_Laboratories"))
 
 f = urllib2.urlopen(BASE_URL)
 text = f.read()
 
-with open('resultsTok.csv', 'wb') as f:
+with open('keywordTok.csv', 'wb') as f:
     writer = csv.writer(f)
     count = 0
     company_links = []
