@@ -36,9 +36,9 @@ def company_industry_multiples(company1, company2):
         company2_info = company_industries[company2]
         toMultiply = 1
         if (company1_info[1] == company2_info[1]):
-            toMultiply = math.sqrt(8)
+            toMultiply = 3.929
         elif (company1_info[0] == company2_info[0]):
-            toMultiply = math.sqrt(6)
+            toMultiply = 3.45
         print(toMultiply)
         return toMultiply
 
@@ -52,7 +52,7 @@ def company_location_multiples(company1, company2):
         company2_location = company_locations[company2]
         toMultiply = 1
         if (company1_location == company2_location):
-            toMultiply = math.sqrt(4)
+            toMultiply = 2.976
         print(toMultiply)
         return toMultiply
 
@@ -69,16 +69,16 @@ def company_equity_multiples(company1, company2):
             toMultiply = 1
         else:
             if (abs(math.log10(company1_equity)-math.log10(company2_equity))<=1):
-                toMultiply = math.sqrt(5)
+                toMultiply = 2.976
             else:
                 if (abs(math.log10(company1_equity)-math.log10(company2_equity))<=2):
-                    toMultiply = math.sqrt(4)
+                    toMultiply = 2.621
                 else:
                     if (abs(math.log10(company1_equity)-math.log10(company2_equity))<=3):
-                        toMultiply = math.sqrt(3)
+                        toMultiply = 2.276
                     else:
                         if (abs(math.log10(company1_equity)-math.log10(company2_equity))<=4):
-                            toMultiply = math.sqrt(2)
+                            toMultiply = 1.936
         print(toMultiply)
         return toMultiply
 
@@ -145,29 +145,35 @@ def create_econ_link_matricies():
     return matrix_dict
 
 def matrix_compilation(full_matrix_dict):
-    count = 0
-    industry_matrix = matrix_dict['industry_matrix']
-    location_matrix = matrix_dict['location_matrix']
-    equity_matrix = matrix_dict['equity_matrix']
-    year_matrix = matrix_dict['year_matrix']
-    final_matrix = pd.DataFrame(index = companies, columns = companies)
-    sum_dict = {}
-    for company1 in companies:
-        sum_row = 0
-        for company2 in companies:
-            val = industry_matrix.get_value(company1, company2) * location_matrix.get_value(company1, company2) * equity_matrix.get_value(company1, company2) * year_matrix.get_value(company1, company2)
-            count += 1
-            print(count)
-    for company1 in companies:
-        divisor = sum_dict[company1]
-        sum_row = 0
-        for company2 in companies:
-            val = (final_matrix.get_value(company1, company2) / divisor)
-            final_matrix.xs(company1)[company2] = val
-            sum_row += val
-            count -= 1
-            print(count)
-    return final_matrix
+    with open('finalResults.csv', 'wb') as f:
+        writer = csv.writer(f)
+        count = 0
+        industry_matrix = matrix_dict['industry_matrix']
+        location_matrix = matrix_dict['location_matrix']
+        equity_matrix = matrix_dict['equity_matrix']
+        year_matrix = matrix_dict['year_matrix']
+        final_matrix = pd.DataFrame(index = companies, columns = companies)
+        sum_dict = {}
+        for company1 in companies:
+            sum_row = 0
+            for company2 in companies:
+                val = industry_matrix.get_value(company1, company2) * location_matrix.get_value(company1, company2) * equity_matrix.get_value(company1, company2) * year_matrix.get_value(company1, company2)
+                final_matrix.xs(company1)[company2] = val
+                sum_row += val
+            sum_dict[company1] = sum_row
+        for company1 in companies:
+            divisor = sum_dict[company1]
+            sum_row = 0
+            val_array = []
+            for company2 in companies:
+                val = (final_matrix.get_value(company1, company2) / divisor)
+                final_matrix.xs(company1)[company2] = val
+                val_array.append(val)
+                sum_row += val
+                count -= 1
+                print(count)
+            writer.writerow(val)
+        return final_matrix
 
 def file_cleaner(link, company_name):
 
