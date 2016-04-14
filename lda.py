@@ -1,21 +1,18 @@
-#import genism 
+import csv
+from bow import BagOfWords
+import gensim
 from gensim import corpora, models
 
-#create a dictionary with the texts
-dictionary = corpora.Dictionary(docDict)
+docDict = {}
+docList = []
 
-#this turns corpus into a list of vectors equal to the nunmber of docs
-#in each doc vector there are tuples corresponding to (term ID, term freq)
-corpus = [dictionary.doc2bow(docDict) for text in docDict]
+with open('keywordTok.csv', 'rt') as csvfile:
+	reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+	for row in reader:
+		docDict[row[0]] = row[1:]
+		docList.append(row[1:])
 
-#now we can create the lda model
-#n is the number of topics that we want
-#p is the number of laps the model takes through corpus
-ldamodel = genism.models.ldamodel.LdaModel(corpus, num_topics=5, id2word = dictionary, passes=1)
-
-#printing will give us the freq of a word in a doc a
-corpus_lda = lda[corpus]
-
-for l,t in izip(corpus_lda,corpus):
-  print l,"#",t
-print 
+dictionary = corpora.Dictionary(docList)
+corpus = [dictionary.doc2bow(text) for text in docList]
+ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics=15, id2word = dictionary, passes=10)
+print(ldamodel.show_topics(num_topics=10, num_words=10, log=False, formatted=True))
