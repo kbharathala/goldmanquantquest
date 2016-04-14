@@ -28,10 +28,8 @@ all_states = ["Alaska", "Alabama", "Arkansas", "American Samoa", "Arizona",
 def company_industry_multiples(company1, company2):
     if (company1 not in company_industries):
         print("Error: company not in dictionary")
-        exit()#delete this!
     elif (company2 not in company_industries):
         print("Error: company not in dictionary")
-        exit()#delete this!
     else:
         company1_info = company_industries[company1]
         company2_info = company_industries[company2]
@@ -46,26 +44,22 @@ def company_industry_multiples(company1, company2):
 def company_location_multiples(company1, company2):
     if (company1 not in company_locations):
         print("Error: company not in dictionary")
-        exit()#delete this!
     elif (company2 not in company_locations):
         print("Error: company not in dictionary")
-        exit()#delete this!
     else:
         company1_location = company_locations[company1]
         company2_location = company_locations[company2]
         toMultiply = 1
         if (company1_location == company2_location):
-            toMultiply = math.sqrt(1.5)
+            toMultiply = math.sqrt(4)
         print(toMultiply)
         return toMultiply
 
 def company_equity_multiples(company1, company2):
     if (company1 not in company_equities):
         print("Error: company not in dictionary")
-        exit()#delete this!
     elif (company2 not in company_equities):
         print("Error: company not in dictionary")
-        exit()#delete this!
     else:
         company1_equity = company_equities[company1]
         company2_equity = company_equities[company2]
@@ -73,8 +67,17 @@ def company_equity_multiples(company1, company2):
         if ((company1_equity == 0) or (company2_equity == 0)):
             toMultiply = 1
         else:
-            if (abs(math.log10(company1_equity)-math.log10(company2_equity))<1):
-                toMultiply = math.sqrt(2)
+            if (abs(math.log10(company1_equity)-math.log10(company2_equity))<=1):
+                toMultiply = math.sqrt(5)
+            else:
+                if (abs(math.log10(company1_equity)-math.log10(company2_equity))<=2):
+                    toMultiply = math.sqrt(4)
+                else:
+                    if (abs(math.log10(company1_equity)-math.log10(company2_equity))<=3):
+                        toMultiply = math.sqrt(3)
+                    else:
+                        if (abs(math.log10(company1_equity)-math.log10(company2_equity))<=4):
+                            toMultiply = math.sqrt(2)
         print(toMultiply)
         return toMultiply
 
