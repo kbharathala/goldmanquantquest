@@ -36,9 +36,9 @@ def company_industry_multiples(company1, company2):
         company2_info = company_industries[company2]
         toMultiply = 1
         if (company1_info[1] == company2_info[1]):
-            toMultiply = math.sqrt(8)
+            toMultiply = 3.929
         elif (company1_info[0] == company2_info[0]):
-            toMultiply = math.sqrt(6)
+            toMultiply = 3.45
         print(toMultiply)
         return toMultiply
 
@@ -52,7 +52,7 @@ def company_location_multiples(company1, company2):
         company2_location = company_locations[company2]
         toMultiply = 1
         if (company1_location == company2_location):
-            toMultiply = math.sqrt(4)
+            toMultiply = 2.976
         print(toMultiply)
         return toMultiply
 
@@ -69,16 +69,16 @@ def company_equity_multiples(company1, company2):
             toMultiply = 1
         else:
             if (abs(math.log10(company1_equity)-math.log10(company2_equity))<=1):
-                toMultiply = math.sqrt(5)
+                toMultiply = 2.976
             else:
                 if (abs(math.log10(company1_equity)-math.log10(company2_equity))<=2):
-                    toMultiply = math.sqrt(4)
+                    toMultiply = 2.621
                 else:
                     if (abs(math.log10(company1_equity)-math.log10(company2_equity))<=3):
-                        toMultiply = math.sqrt(3)
+                        toMultiply = 2.276
                     else:
                         if (abs(math.log10(company1_equity)-math.log10(company2_equity))<=4):
-                            toMultiply = math.sqrt(2)
+                            toMultiply = 1.936
         print(toMultiply)
         return toMultiply
 
