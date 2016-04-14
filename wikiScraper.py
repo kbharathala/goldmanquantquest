@@ -13,6 +13,7 @@ COMPANY_COUNT = 1008
 company_equities = {}
 company_industries = {}
 company_locations = {}
+company_years = {}
 companies = []
 all_states = ["Alaska", "Alabama", "Arkansas", "American Samoa", "Arizona",
 "California", "Colorado", "Connecticut", "District ", "of Columbia",
@@ -78,29 +79,53 @@ def company_equity_multiples(company1, company2):
         print(toMultiply)
         return toMultiply
 
+def company_year_multiples(company1, company2):
+    if (company1 not in company_years):
+        print("Error: company not in dictionary")
+        exit()#delete this!
+    elif (company2 not in company_years):
+        print("Error: company not in dictionary")
+        exit()#delete this!
+    else:
+        company1_year = company_years[company1]
+        company2_year = company_years[company2]
+        toMultiply = 1#something to change
+        if ((company1_year == 0) or (company2_year == 0)):
+            toMultiply = 1
+        else:   #NEED TO CHANGE THIS
+            if (abs(math.log10(company1_year)-math.log10(company2_year))<1):
+                toMultiply = math.sqrt(2)
+        print(toMultiply)
+        return toMultiply        
+
 def create_econ_link_matricies():
     matrix_dict = {}
     im = pd.DataFrame(index = companies, columns = companies)
     lm = pd.DataFrame(index = companies, columns = companies)
     em = pd.DataFrame(index = companies, columns = companies)
+    yr = pd.DataFrame(index = companies, columns = companies)
     count = 0
     for company1 in companies:
         for company2 in companies:
             val_i = 1
             val_l = 1
             val_e = 1
+            val_y = 1
             if company1 != company2:
                 val_i = company_industry_multiples(company1, company2)
                 val_l = company_location_multiples(company1, company2)
                 val_e = company_equity_multiples(company1, company2)
+                val_y = company_year_multiples(company1, company2)
             im.xs(company1)[company2] = val_i
             lm.xs(company1)[company2] = val_l
             em.xs(company1)[company2] = val_e
+            yr.xs(company1)[company2] = val_y
             count += 1
             print(count)
     matrix_dict['industry_matrix'] = im
     matrix_dict['location_matrix'] = lm
     matrix_dict['equity_matrix'] = em
+    matrix_dict['year_matrix'] = yr
     return matrix_dict
 
 def matrix_compilation(full_matrix_dict):
@@ -108,12 +133,13 @@ def matrix_compilation(full_matrix_dict):
     industry_matrix = matrix_dict['industry_matrix']
     location_matrix = matrix_dict['location_matrix']
     equity_matrix = matrix_dict['equity_matrix']
+    year_matrix = matrix_dict['year_matrix']
     final_matrix = pd.DataFrame(index = companies, columns = companies)
     sum_dict = {}
     for company1 in companies:
         sum_row = 0
         for company2 in companies:
-            val = industry_matrix.get_value(company1, company2) * location_matrix.get_value(company1, company2) * equity_matrix.get_value(company1, company2)#will need to be modified once we have lda
+            val = industry_matrix.get_value(company1, company2) * location_matrix.get_value(company1, company2) * equity_matrix.get_value(company1, company2) * year_matrix.get_value(company1, company2)#will need to be modified once we have lda
             final_matrix.xs(company1)[company2] = val
             sum_row += val
         sum_dict[company1] = sum_row
@@ -150,7 +176,18 @@ def file_cleaner(link, company_name):
     temp = temp[temp.find("Website"):]
     tokens = []
 
-    common_words = ["Wikipedia", "CEO", "amp", "view", "edits"]
+    # box_text = temp[temp.find('AbbVie'):]
+    # print(box_text)
+    # year_start = box_text.find("Founded")
+    # year_stop = box_text.find(";")
+    # year_text = box_text[year_start:year_stop]
+    # print(year_text)
+
+    common_words = ["Wikipedia", "CEO", "amp", "view", "edits", "View of the content page", "Discussion about the content page"
+                    "A list of recent changes in the wiki", " what you can do", "Discussion about edits from this IP address", 
+                    "Find background information on current events", "Load a random article", "Recent changes in pages linked from this page"
+                    , "A list of edits made from this IP address", "Upload files", "Enlarge", "Portal", "Template", "Wikipedia:Citation need",
+                    "Visit the main page", "Reuters", "Forbes", "Wikipedia:About", "Help:Category", "Help:CS1 errors"]
 
     while(temp.find("<a href=\"/wiki/") != -1):
         checker = True
@@ -159,7 +196,8 @@ def file_cleaner(link, company_name):
         end = temp[second+first+7:].find("\"")
         term = temp[second+first+7:end+second+first+7]
         temp = temp[end:]
-        if term not in tokens and term not in all_states and "Wikipedia" not in term and "CEO" not in term and "amp" not in term and "Category" not in term:
+        #if term not in tokens and term.strip() not in all_states and "Wikipedia" not in term and "CEO" not in term and "amp" not in term and "Category" not in term:
+        if term not in common_words and term.strip() not in all_states:
             tokens.append(term)
             # for word in common_words:
             #     if word in term:
@@ -174,69 +212,83 @@ def file_cleaner(link, company_name):
     # tokens = [str(i) for i in tokens if not i in get_stop_words('en')]
     # tokens = [i for i in tokens if not i.isdigit()]
 
-    # # Removes all the html and extra white space
-    # text = re.sub('<[^>]*>', '', text)
-    # #print(text)
-    # text = " ".join(text.split())
+    # Removes all the html and extra white space
+    text = re.sub('<[^>]*>', '', text)
+    #print(text)
+    text = " ".join(text.split())
 
-    # # Removes everything after See Also
-    # first = text.find("See also")
-    # second = text[first+1:].find("See also")
-    # text = text[:first+second]
+    # Removes everything after See Also
+    first = text.find("See also")
+    second = text[first+1:].find("See also")
+    text = text[:first+second]
 
-    # # Removes everything before the start of the article
-    # first = text.find("navigation, search")
-    # text = text[first+18:]
+    # Removes everything before the start of the article
+    first = text.find("navigation, search")
+    text = text[first+18:]
 
-    # temp = text[text.find("Website"):]
+    temp = text[text.find("Website"):]
 
-    # # Removes everything between brackets.
-    # text = re.sub(r'\[[^)]*\]', '', text)
+    # Removes everything between brackets.
+    text = re.sub(r'\[[^)]*\]', '', text)
+    year_start = text.find("Founded ")
+    equity_start = text.find("Total assets US$")
 
-    # equity_start = text.find("Total assets US$")
+    year_text = text[year_start:]
+    year_stop = year_text.find(";")
+    year_info = year_text[:year_stop]
+    year_info = year_info.split(" ")
+    if (len(year_info) >=2):
+        year_info = year_info[1]
+    else:
+        year_info = year_info[0]
+        print(year_info)
+    if (year_info is None):
+        company_years[company_name] = 0
+    else:
+        company_years[company_name] = year_info
 
-    # if (equity_start < 0):
-    #     company_equities[company_name] = 0
-    # else:
-    #     equity_text = text[equity_start + 16:]
-    #     equity_end = equity_text.find("il")
-    #     if ((equity_end  > 25) or (equity_end < 0)):
-    #         equity_end = equity_text.find("B (")
-    #         if (equity_end  > 25 or equity_end < 0):
-    #             equity_end = equity_text.find("M (")
-    #             if (equity_end > 25 or equity_end < 0):
-    #                 equity_end = equity_text.find("(FY ")
-    #                 if (equity_end > 35 or equity_end < 0):
-    #                     equity_end = equity_text.find("bn")
-    #     equity_amt = equity_text[:equity_end]
-    #     equity_amt = equity_amt.strip().lower().replace(',', '').replace('$', '')
-    #     print(company_name)
-    #     #print(equity_amt)
-    #     val = 0
-    #     if 'b' in equity_amt:
-    #         val = 1000000000
-    #     else:
-    #         if 'm' in equity_amt:
-    #             val = 1000000
-    #         else:
-    #             if 't' in equity_amt:
-    #                 val = 1000000000000
-    #             else:
-    #                 val = 1
-    #     equity_amt = equity_amt.split("&")[0].split(" ")[0]
-    #     equity_amt = float(equity_amt) * val
-    #     if equity_amt < 1000000:
-    #         print"SOMETHING WENT WRONG"
-    #         equity_amt = 0
-    #     company_equities[company_name] = equity_amt
-    #     #print(equity_amt)
+    if (equity_start < 0):
+        company_equities[company_name] = 0
+    else:
+        equity_text = text[equity_start + 16:]
+        equity_end = equity_text.find("il")
+        if ((equity_end  > 25) or (equity_end < 0)):
+            equity_end = equity_text.find("B (")
+            if (equity_end  > 25 or equity_end < 0):
+                equity_end = equity_text.find("M (")
+                if (equity_end > 25 or equity_end < 0):
+                    equity_end = equity_text.find("(FY ")
+                    if (equity_end > 35 or equity_end < 0):
+                        equity_end = equity_text.find("bn")
+        equity_amt = equity_text[:equity_end]
+        equity_amt = equity_amt.strip().lower().replace(',', '').replace('$', '')
+        print(company_name)
+        #print(equity_amt)
+        val = 0
+        if 'b' in equity_amt:
+            val = 1000000000
+        else:
+            if 'm' in equity_amt:
+                val = 1000000
+            else:
+                if 't' in equity_amt:
+                    val = 1000000000000
+                else:
+                    val = 1
+        equity_amt = equity_amt.split("&")[0].split(" ")[0]
+        equity_amt = float(equity_amt) * val
+        if equity_amt < 1000000:
+            print"SOMETHING WENT WRONG"
+            equity_amt = 0
+        company_equities[company_name] = equity_amt
+        #print(equity_amt)
 
-    # # Tokenizing and removing common stop words
-    # # tokens = tokenizer.tokenize(text.lower())
-    # # tokens = [unicode(i, 'ascii', 'ignore') for i in tokens]
-    # # tokens = [str(i) for i in tokens if not i in get_stop_words('en')]
-    # # tokens = [i for i in tokens if not i.isdigit()]
-    # # tokens = [i for i in tokens if len(i) > 2]
+    # Tokenizing and removing common stop words
+    # tokens = tokenizer.tokenize(text.lower())
+    # tokens = [unicode(i, 'ascii', 'ignore') for i in tokens]
+    # tokens = [str(i) for i in tokens if not i in get_stop_words('en')]
+    # tokens = [i for i in tokens if not i.isdigit()]
+    # tokens = [i for i in tokens if len(i) > 2]
 
     return tokens
 
@@ -267,6 +319,7 @@ with open('keywordTok.csv', 'wb') as f:
             place_start_location = location_text.find('title="') + 7
             place_end_location = location_text.find('">')
             end_location = text.find("</a></td>");
+
 
             if(count % 2 == 0):
                 company_name = text[18:end-2]
@@ -302,6 +355,7 @@ with open('keywordTok.csv', 'wb') as f:
     print(company_locations)
     print('company_equities')
     print(company_equities)
+    print(company_years)
     print(companies)
 
     matrix_dict = create_econ_link_matricies()
