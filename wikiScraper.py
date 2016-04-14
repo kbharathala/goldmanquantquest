@@ -243,26 +243,20 @@ def file_cleaner(link, company_name):
     first = text.find("navigation, search")
     text = text[first+18:]
 
-    temp = text[text.find("Website"):]
+    year = text[text.find("Founded")+8:text.find("Founders")]
+    year = re.sub('[^0-9a-zA-Z]', ' ', year)
+    year = year.split(" ")
+    year = [i for i in year if len(i) == 4][0]
+    print(year)
+
+    try:
+        company_years[company_name] = float(year_info)
+    except:
+        company_years[company_name] = 0
 
     # Removes everything between brackets.
-    text = re.sub(r'\[[^)]*\]', '', text)
-    year_start = text.find("Founded ")
-    equity_start = text.find("Total assets US$")
 
-    year_text = text[year_start:]
-    year_stop = year_text.find(";")
-    year_info = year_text[:year_stop]
-    year_info = year_info.split(" ")
-    if (len(year_info) >=2):
-        year_info = year_info[1]
-    else:
-        year_info = year_info[0]
-        print(year_info)
-    if (year_info is None):
-        company_years[company_name] = 0
-    else:
-        company_years[company_name] = float(year_info)
+    equity_start = text.find("Total assets US$")
 
     if (equity_start < 0):
         company_equities[company_name] = 0
@@ -293,7 +287,10 @@ def file_cleaner(link, company_name):
                 else:
                     val = 1
         equity_amt = equity_amt.split("&")[0].split(" ")[0]
-        equity_amt = float(equity_amt) * val
+        try:
+            equity_amt = float(equity_amt) * val
+        except:
+            equity_amt = 0
         if equity_amt < 1000000:
             print"SOMETHING WENT WRONG"
             equity_amt = 0
